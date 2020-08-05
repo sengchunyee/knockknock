@@ -4,6 +4,7 @@ const serviceAccount = require("../../knockknock-6bda4-firebase-adminsdk-ixft2-3
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
   databaseURL: "https://knockknock-6bda4.firebaseio.com",
+  storageBucket: "knockknock-6bda4.appspot.com",
 });
 const db = admin.firestore();
 module.exports = { admin, db };
