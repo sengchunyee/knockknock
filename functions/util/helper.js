@@ -33,7 +33,7 @@ const validateSignUp = (data) => {
   }
 
   return {
-    valid: Object.keys(errors).keys.length > 0 ? true : false,
+    valid: Object.keys(errors).length === 0 ? true : false,
     errors,
   };
 };
@@ -47,9 +47,10 @@ const validateLogin = (data) => {
   if (isEmpty(data.password)) {
     errors.email = "Password must not be empty";
   }
-  if (Object.keys(errors).length > 0) {
-    return res.status(400).json({ errors });
-  }
+  return {
+    valid: Object.keys(errors).length === 0 ? true : false,
+    errors,
+  };
 };
 
 module.exports = { validateSignUp, validateLogin };

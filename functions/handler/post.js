@@ -1,4 +1,4 @@
-const db = require("../util/admin");
+const { db } = require("../util/admin");
 
 exports.getAllPosts = (req, res) => {
   db.collection("knock")
@@ -29,7 +29,7 @@ exports.newPost = (req, res) => {
   db.collection("knock")
     .add(newKnock)
     .then((data) => {
-      return res.json({ message: `document ${data.id} created successfully` });
+      return res.json({ message: `New Post ${data.id} created successfully` });
     })
     .catch((err) => {
       return res.json(400).json(err);

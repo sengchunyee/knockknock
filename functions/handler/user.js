@@ -13,7 +13,7 @@ exports.signUp = (req, res) => {
     confirmPassword: req.body.confirmPassword,
     handle: req.body.handle,
   };
-  const { valid, errors } = validateSignUp({ newUser });
+  const { valid, errors } = validateSignUp(newUser);
   if (!valid) return res.status(400).json({ errors });
   db.doc(`/users/${newUser.handle}`)
     .get()
