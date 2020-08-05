@@ -53,4 +53,11 @@ const validateLogin = (data) => {
   };
 };
 
-module.exports = { validateSignUp, validateLogin };
+const randomNameGenerate = () => {
+  const result =
+    Math.random().toString(36).substring(2, 15) +
+    Math.random().toString(36).substring(2, 15);
+  return result;
+};
+
+module.exports = { validateSignUp, validateLogin, randomNameGenerate };

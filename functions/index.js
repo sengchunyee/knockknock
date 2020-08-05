@@ -2,7 +2,7 @@ const functions = require("firebase-functions");
 const express = require("express");
 const app = express();
 const { getAllPosts, newPost } = require("./handler/post");
-const { signUp, login } = require("./handler/user");
+const { signUp, login, uploadImage } = require("./handler/user");
 const tokenAuth = require("./util/auth");
 
 //retrieve all post
@@ -16,5 +16,8 @@ app.post("/signup", signUp);
 
 //login
 app.post("/login", login);
+
+//upload image
+app.post("/user/img", tokenAuth, uploadImage);
 
 exports.api = functions.region("us-central1").https.onRequest(app);
