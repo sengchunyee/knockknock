@@ -1,7 +1,12 @@
 const functions = require("firebase-functions");
 const express = require("express");
 const app = express();
-const { getAllPosts, newPost } = require("./handler/post");
+const {
+  getAllPosts,
+  newPost,
+  getPost,
+  commentPost,
+} = require("./handler/post");
 const {
   signUp,
   login,
@@ -15,7 +20,13 @@ const tokenAuth = require("./util/auth");
 app.get("/allPosts", getAllPosts);
 
 //post new post
-app.post("/knock", tokenAuth, newPost);
+app.post("/post", tokenAuth, newPost);
+
+//retrieve specific post
+app.get("/post/:postId", getPost);
+
+//comment a post
+app.post("/post/:postId/comment", tokenAuth, commentPost);
 
 //sign up as new user
 app.post("/signup", signUp);
