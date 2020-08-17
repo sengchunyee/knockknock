@@ -7,6 +7,7 @@ const {
   validateSignUp,
   validateLogin,
   randomNameGenerate,
+  reduceUserDetails,
 } = require("../util/helper");
 
 //signup routes
@@ -122,4 +123,18 @@ exports.uploadImage = (req, res) => {
       });
   });
   busboy.end(req.rawBody);
+};
+
+//add user details
+exports.addUserDetails = (req, res) => {
+  const userDetails = reduceUserDetails(req.body);
+  db.doc(`/users/${req.user.handle}`)
+    // .get()
+    .update(userDetails)
+    .then(() => {
+      return res.json({ message: "Details update successfully" });
+    })
+    .catch((err) => {
+      return console.log(err);
+    });
 };
