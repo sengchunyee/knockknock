@@ -1,3 +1,6 @@
+const { user } = require("firebase-functions/lib/providers/auth");
+const _ = require("lodash");
+
 const isEmpty = (value) => {
   return (
     value === undefined ||
@@ -11,6 +14,13 @@ const isEmail = (email) => {
   let emailRegEx = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (email.match(emailRegEx)) return true;
   else return false;
+};
+
+//eliminate empty spaces of property in object
+const trimObject = (data) => {
+  let value = {};
+  value = Object.keys(data).map((k) => (data[k] = data[k].trim()));
+  return value;
 };
 
 //validate user signup
@@ -60,4 +70,33 @@ const randomNameGenerate = () => {
   return result;
 };
 
-module.exports = { validateSignUp, validateLogin, randomNameGenerate };
+const reduceUserDetails = (data) => {
+  // const userDetails = _.values(data).every(!isEmpty);
+  let userDetails = {};
+
+  if (!isEmpty(data.bio.trim())) {
+    userDetails.bio = data.bio;
+  }
+
+  if (
+    !isEmpty(data.website.trim()) &&
+    data.website.trim().substring(0, 4) !== "http"
+  ) {
+    userDetails.website = `http://${data.website.trim()}`;
+  } else {
+    userDetails.website = data.website;
+  }
+
+  if (!isEmpty(data.location.trim())) {
+    userDetails.location = data.location;
+  }
+
+  return userDetails;
+};
+
+module.exports = {
+  validateSignUp,
+  validateLogin,
+  randomNameGenerate,
+  reduceUserDetails,
+};
