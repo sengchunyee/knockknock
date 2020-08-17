@@ -138,3 +138,29 @@ exports.addUserDetails = (req, res) => {
       return console.log(err);
     });
 };
+
+//get user details
+exports.getProfile = (req, res) => {
+  let userProfile = {};
+  db.doc(`/users/${req.user.handle}`)
+    .get()
+    .then((doc) => {
+      if (doc.exists) {
+        userProfile.credentials = doc.data();
+        return db
+          .collection("likes")
+          .where("userHandle", "==", req.user.handle)
+          .get();
+      }
+    })
+    .then((data) => {
+      userProfile.likes = [];
+      data.forEach((doc) => {
+        userProfile.likes.push(doc.data());
+      });
+      return res.json(userProfile);
+    })
+    .catch((err) => {
+      return res.status(500).json(err);
+    });
+};

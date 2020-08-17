@@ -7,6 +7,7 @@ const {
   login,
   uploadImage,
   addUserDetails,
+  getProfile,
 } = require("./handler/user");
 const tokenAuth = require("./util/auth");
 
@@ -27,5 +28,8 @@ app.post("/user/img", tokenAuth, uploadImage);
 
 //add user details
 app.post("/user/detail", tokenAuth, addUserDetails);
+
+//get own details
+app.get("/user", tokenAuth, getProfile);
 
 exports.api = functions.region("us-central1").https.onRequest(app);
