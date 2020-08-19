@@ -8,6 +8,7 @@ const {
   commentPost,
   likePost,
   unlikePost,
+  deletePost,
 } = require("./handler/post");
 const {
   signUp,
@@ -51,4 +52,6 @@ app.get("/post/:postId/like", tokenAuth, likePost);
 //unlike post
 app.get("/post/:postId/unlike", tokenAuth, unlikePost);
 
+//delete post
+app.delete("/post/:postId", tokenAuth, deletePost);
 exports.api = functions.region("us-central1").https.onRequest(app);
