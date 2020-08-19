@@ -6,6 +6,8 @@ const {
   newPost,
   getPost,
   commentPost,
+  likePost,
+  unlikePost,
 } = require("./handler/post");
 const {
   signUp,
@@ -42,5 +44,11 @@ app.post("/user/detail", tokenAuth, addUserDetails);
 
 //get own details
 app.get("/user", tokenAuth, getProfile);
+
+//like post
+app.get("/post/:postId/like", tokenAuth, likePost);
+
+//unlike post
+app.get("/post/:postId/unlike", tokenAuth, unlikePost);
 
 exports.api = functions.region("us-central1").https.onRequest(app);
