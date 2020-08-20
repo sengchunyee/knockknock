@@ -18,6 +18,7 @@ const {
   getProfile,
 } = require("./handler/user");
 const tokenAuth = require("./util/auth");
+const { db } = require("./util/admin");
 
 //retrieve all post
 app.get("/allPosts", getAllPosts);
@@ -54,4 +55,78 @@ app.get("/post/:postId/unlike", tokenAuth, unlikePost);
 
 //delete post
 app.delete("/post/:postId", tokenAuth, deletePost);
+
 exports.api = functions.region("us-central1").https.onRequest(app);
+
+//send notifications on liking a post
+exports.createNotificationOnLike = functions
+  .region("us-central1")
+  .firestore.document("likes/{id}")
+  .onCreate((snapshot) => {
+    db.doc(`/knock/${snapshot.data().postId}`)
+      .get()
+      .then((doc) => {
+        if (doc.exists) {
+          return db.doc(`/notifications/${snapshot.id}`).set({
+            createdAt: new Date().toISOString(),
+            recipient: doc.data().userHandle,
+            sender: snapshot.data().userHandle,
+            type: "like",
+            read: false,
+            postId: doc.id,
+          });
+        }
+        return;
+      })
+      .then(() => {
+        return;
+      })
+      .catch((err) => {
+        console.error(err);
+        return;
+      });
+  });
+
+//send notifications on commenting a post
+exports.createNotificationOnComment = functions
+  .region("us-central1")
+  .firestore.document("comments/{id}")
+  .onCreate((snapshot) => {
+    db.doc(`/knock/${snapshot.data().postId}`)
+      .get()
+      .then((doc) => {
+        if (doc.exists) {
+          return db.doc(`/notifications/${snapshot.id}`).set({
+            createdAt: new Date().toISOString(),
+            recipient: doc.data().userHandle,
+            sender: snapshot.data().userHandle,
+            type: "comment",
+            read: false,
+            postId: doc.id,
+          });
+        }
+        return;
+      })
+      .then(() => {
+        return;
+      })
+      .catch((err) => {
+        console.error(err);
+        return;
+      });
+  });
+
+//send notifications on unliking a post
+exports.deleteNotificationOnUnlike = functions
+  .region("us-central1")
+  .firestore.document("likes/{id}")
+  .onDelete((snapshot) => {
+    db.doc(`/notifications/${snapshot.id}`)
+      .delete()
+      .then(() => {
+        return;
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+  });

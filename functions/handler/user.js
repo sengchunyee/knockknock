@@ -152,11 +152,32 @@ exports.getProfile = (req, res) => {
           .where("userHandle", "==", req.user.handle)
           .get();
       }
+      return res.status(404).json({ error: "Not found" });
     })
     .then((data) => {
       userProfile.likes = [];
       data.forEach((doc) => {
         userProfile.likes.push(doc.data());
+      });
+      return db
+        .collection("notifications")
+        .where("recipient", "==", req.user.handle)
+        .orderBy("createdAt", "desc")
+        .get();
+    })
+    .then((data) => {
+      console.log("data=", data);
+      userProfile.notifications = [];
+      data.forEach((doc) => {
+        userProfile.notifications.push({
+          recipient: doc.data().recipient,
+          sender: doc.data().sender,
+          createdAt: doc.data().createdAt,
+          postId: doc.data().postId,
+          notificationsId: doc.id,
+          type: doc.data().type,
+          read: doc.data().read,
+        });
       });
       return res.json(userProfile);
     })
