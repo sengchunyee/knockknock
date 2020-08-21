@@ -16,6 +16,7 @@ const {
   uploadImage,
   addUserDetails,
   getProfile,
+  getOtherUserProfile,
 } = require("./handler/user");
 const tokenAuth = require("./util/auth");
 const { db } = require("./util/admin");
@@ -55,6 +56,9 @@ app.get("/post/:postId/unlike", tokenAuth, unlikePost);
 
 //delete post
 app.delete("/post/:postId", tokenAuth, deletePost);
+
+//get other user profile
+app.get("/user/:handle", getOtherUserProfile);
 
 exports.api = functions.region("us-central1").https.onRequest(app);
 
