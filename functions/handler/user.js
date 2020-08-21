@@ -42,7 +42,7 @@ exports.signUp = (req, res) => {
         userId: userId,
         imageUrl: `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${noImage}?alt=media`,
       };
-      return db.doc(`/users/${newUser.handle}`).set(userCredentials);
+      return db.doc(`/users/${newUser.userId}`).set(userCredentials);
     })
     .then(() => {
       return res.status(201).json({ tokenId });
@@ -183,5 +183,43 @@ exports.getProfile = (req, res) => {
     })
     .catch((err) => {
       return res.status(500).json(err);
+    });
+};
+
+//get other user profile
+exports.getOtherUserProfile = (req, res) => {
+  let userProfile = {};
+  db.doc(`users/${req.params.handle}`)
+    .get()
+    .then((doc) => {
+      if (!doc.exists) {
+        return res.status(404).json({ error: "Profile not found" });
+      } else {
+        userProfile.user = doc.data();
+        return db
+          .collection("knock")
+          .where("userHandle", "==", req.params.handle)
+          .orderBy("createdAt", "desc")
+          .get();
+      }
+    })
+    .then((data) => {
+      userProfile.post = [];
+      data.forEach((doc) => {
+        userProfile.post.push({
+          body: doc.data().body,
+          createdAt: doc.data().createdAt,
+          userHandle: doc.data().userHandle,
+          userImage: doc.data().userImage,
+          likeCount: doc.data().likeCount,
+          commentCount: doc.data().commentCount,
+          postId: doc.data().postId,
+        });
+      });
+      return res.json(userProfile);
+    })
+    .catch((err) => {
+      console.error(err);
+      return res.status(500).json({ error: err });
     });
 };
