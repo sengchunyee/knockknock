@@ -223,3 +223,21 @@ exports.getOtherUserProfile = (req, res) => {
       return res.status(500).json({ error: err });
     });
 };
+
+//mark read notifications
+exports.markNotificationsRead = (req, res) => {
+  let batch = db.batch();
+  req.body.forEach((notificationsId) => {
+    const notification = db.doc(`/notifications/${notificationsId}`);
+    batch.update(notification, { read: true });
+  });
+  batch
+    .commit()
+    .then(() => {
+      return res.json({ message: "Notifications read" });
+    })
+    .catch((err) => {
+      console.error(err);
+      return res.status(400).json({ err: err });
+    });
+};
