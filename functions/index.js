@@ -1,104 +1,198 @@
-const serviceAccount = require("../knockknock-6bda4-firebase-adminsdk-ixft2-37805485f7.json");
 const functions = require("firebase-functions");
-const admin = require("firebase-admin");
-const firebase = require("firebase");
 const express = require("express");
 const app = express();
+const {
+  getAllPosts,
+  newPost,
+  getPost,
+  commentPost,
+  likePost,
+  unlikePost,
+  deletePost,
+} = require("./handler/post");
+const {
+  signUp,
+  login,
+  uploadImage,
+  addUserDetails,
+  getProfile,
+  getOtherUserProfile,
+  markNotificationsRead,
+} = require("./handler/user");
+const tokenAuth = require("./util/auth");
+const { db } = require("./util/admin");
 
-const firebaseConfig = {
-  apiKey: "AIzaSyAJP0xVUFF9-2HZ6QifbQs8l-trqYZaxiQ",
-  authDomain: "knockknock-6bda4.firebaseapp.com",
-  databaseURL: "https://knockknock-6bda4.firebaseio.com",
-  projectId: "knockknock-6bda4",
-  storageBucket: "knockknock-6bda4.appspot.com",
-  messagingSenderId: "497929266276",
-  appId: "1:497929266276:web:82f12b06379d6ee288eb71",
-  measurementId: "G-QGMV8EPV59",
-};
+//retrieve all post
+app.get("/allPosts", getAllPosts);
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-  databaseURL: "https://knockknock-6bda4.firebaseio.com",
-});
-firebase.initializeApp(firebaseConfig);
-const db = admin.firestore();
+//post new post
+app.post("/post", tokenAuth, newPost);
 
-app.get("/knocks", (req, res) => {
-  db.collection("knock")
-    .orderBy("createdAt", "desc")
-    .get()
-    .then((data) => {
-      let knock = [];
-      data.forEach((data) => {
-        knock.push({
-          body: data.data().body,
-          createdAt: data.data().createdAt,
-          userHandle: data.data().userHandle,
-        });
-      });
-      return res.json(knock);
-    })
-    .catch((err) => {
-      console.error(err);
-    });
-});
+//retrieve specific post
+app.get("/post/:postId", getPost);
 
-app.post("/knock", (req, res) => {
-  const newKnock = {
-    body: req.body.body,
-    userHandle: req.body.userHandle,
-    createdAt: new Date().toISOString(),
-  };
-  db.collection("knock")
-    .add(newKnock)
-    .then((data) => {
-      return res.json({ message: `document ${data.id} created successfully` });
-    })
-    .catch((err) => {
-      res.status(500).json({ error: "something went wrong" });
-      console.error(err);
-    });
-});
+//comment a post
+app.post("/post/:postId/comment", tokenAuth, commentPost);
 
-app.post("/signup", (req, res) => {
-  let tokenId, userId;
-  const newUser = {
-    email: req.body.email,
-    password: req.body.password,
-    confirmPassword: req.body.confirmPassword,
-    handle: req.body.handle,
-  };
-  db.doc(`/users/${newUser.handle}`)
-    .get()
-    .then(() => {
-      return firebase
-        .auth()
-        .createUserWithEmailAndPassword(newUser.email, newUser.password);
-    })
-    .then((data) => {
-      userId = data.user.uid;
-      return data.user.getIdToken();
-    })
-    .then((token) => {
-      tokenId = token;
-      const userCredentials = {
-        handle: newUser.handle,
-        email: newUser.email,
-        createdAt: new Date().toISOString(),
-        userId: userId,
-      };
-      return db.doc(`/users/${newUser.handle}`).set(userCredentials);
-    })
-    .then(() => {
-      return res.status(201).json({ tokenId });
-    })
-    .catch((err) => {
-      if (err.code === "auth/email-already-in-use") {
-        return res.status(400).json({ message: `${newUser.email} is taken` });
-      } else {
-        return res.status(500).json({ message: err.code });
-      }
-    });
-});
+//sign up as new user
+app.post("/signup", signUp);
+
+//login
+app.post("/login", login);
+
+//upload image
+app.post("/user/img", tokenAuth, uploadImage);
+
+//add user details
+app.post("/user/detail", tokenAuth, addUserDetails);
+
+//get own details
+app.get("/user", tokenAuth, getProfile);
+
+//like post
+app.get("/post/:postId/like", tokenAuth, likePost);
+
+//unlike post
+app.get("/post/:postId/unlike", tokenAuth, unlikePost);
+
+//delete post
+app.delete("/post/:postId", tokenAuth, deletePost);
+
+//get other user profile
+app.get("/user/:handle", getOtherUserProfile);
+
+//mark notifications read
+app.post("/notifications", tokenAuth, markNotificationsRead);
 
 exports.api = functions.region("us-central1").https.onRequest(app);
+
+//send notifications on liking a post
+exports.createNotificationOnLike = functions
+  .region("us-central1")
+  .firestore.document("likes/{id}")
+  .onCreate((snapshot) => {
+    return db
+      .doc(`/knock/${snapshot.data().postId}`)
+      .get()
+      .then((doc) => {
+        if (
+          doc.exists &&
+          doc.data().userHandle !== snapshot.data().userHandle
+        ) {
+          return db.doc(`/notifications/${snapshot.id}`).set({
+            createdAt: new Date().toISOString(),
+            recipient: doc.data().userHandle,
+            sender: snapshot.data().userHandle,
+            type: "like",
+            read: false,
+            postId: doc.id,
+          });
+        }
+        return;
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+  });
+
+//send notifications on commenting a post
+exports.createNotificationOnComment = functions
+  .region("us-central1")
+  .firestore.document("comments/{id}")
+  .onCreate((snapshot) => {
+    return db
+      .doc(`/knock/${snapshot.data().postId}`)
+      .get()
+      .then((doc) => {
+        if (doc.exists !== snapshot.data().userHandle) {
+          return db.doc(`/notifications/${snapshot.id}`).set({
+            createdAt: new Date().toISOString(),
+            recipient: doc.data().userHandle,
+            sender: snapshot.data().userHandle,
+            type: "comment",
+            read: false,
+            postId: doc.id,
+          });
+        }
+        return;
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+  });
+
+//send notifications on unliking a post
+exports.deleteNotificationOnUnlike = functions
+  .region("us-central1")
+  .firestore.document("likes/{id}")
+  .onDelete((snapshot) => {
+    return db
+      .doc(`/notifications/${snapshot.id}`)
+      .delete()
+      .catch((err) => {
+        console.error(err);
+      });
+  });
+
+//change post's user imageUrl whenever user update new imageUrl
+exports.onUserImageChange = functions
+  .region("us-central1")
+  .firestore.document("users/{id}")
+  .onUpdate((change) => {
+    console.log("before=", change.before.data());
+    console.log("after=", change.after.data());
+    if (change.before.data().imageUrl !== change.after.data().imageUrl) {
+      console.log("image has change");
+      const batch = db.batch();
+      return db
+        .collection("knock")
+        .where("userHandle", "==", change.before.data().handle)
+        .get()
+        .then((data) => {
+          data.forEach((doc) => {
+            const post = db.doc(`/knock/${doc.id}`);
+            batch.update(post, { userImage: change.after.data().imageUrl });
+          });
+          return batch.commit();
+        });
+    } else {
+      return true;
+    }
+  });
+
+//delete notifications, likes and comment when post deleted
+exports.onPostDeleted = functions
+  .region("us-central1")
+  .firestore.document("knock/{postId}")
+  .onDelete((snapshot, context) => {
+    const postId = context.params.postId;
+    const batch = db.batch();
+    return db
+      .collection("comments")
+      .where("postId", "==", postId)
+      .get()
+      .then((data) => {
+        data.forEach((doc) => {
+          batch.delete(db.doc(`comments/${doc.id}`));
+        });
+        return db.collection("likes").where("postId", "==", postId).get();
+      })
+      .then((data) => {
+        data.forEach((doc) => {
+          batch.delete(db.doc(`likes/${doc.id}`));
+        });
+        return db
+          .collection("notifications")
+          .where("postId", "==", postId)
+          .get();
+      })
+      .then((data) => {
+        data.forEach((doc) => {
+          batch.delete(db.doc(`notifications/${doc.id}`));
+        });
+        return batch.commit();
+      })
+      .catch((err) => {
+        return console.error(err);
+      });
+  });
