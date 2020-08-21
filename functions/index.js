@@ -17,6 +17,7 @@ const {
   addUserDetails,
   getProfile,
   getOtherUserProfile,
+  markNotificationsRead,
 } = require("./handler/user");
 const tokenAuth = require("./util/auth");
 const { db } = require("./util/admin");
@@ -59,6 +60,9 @@ app.delete("/post/:postId", tokenAuth, deletePost);
 
 //get other user profile
 app.get("/user/:handle", getOtherUserProfile);
+
+//mark notifications read
+app.post("/notifications", tokenAuth, markNotificationsRead);
 
 exports.api = functions.region("us-central1").https.onRequest(app);
 
