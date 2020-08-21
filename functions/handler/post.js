@@ -9,9 +9,13 @@ exports.getAllPosts = (req, res) => {
       let knock = [];
       data.forEach((data) => {
         knock.push({
+          postId: doc.id,
           body: data.data().body,
           createdAt: data.data().createdAt,
           userHandle: data.data().userHandle,
+          userImage: data.data().userImage,
+          commentCount: data.data().commentCount,
+          likeCount: data.data().likeCount,
         });
       });
       return res.json(knock);
@@ -75,7 +79,7 @@ exports.getPost = (req, res) => {
 //comment on post
 exports.commentPost = (req, res) => {
   if (req.body.body.trim().length === 0) {
-    return res.status(400).json({ error: "Comment must not be empty." });
+    return res.status(400).json({ comment: "Comment must not be empty." });
   }
   const newComment = {
     body: req.body.body.trim(),
