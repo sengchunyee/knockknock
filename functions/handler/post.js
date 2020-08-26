@@ -7,15 +7,15 @@ exports.getAllPosts = (req, res) => {
     .get()
     .then((data) => {
       let knock = [];
-      data.forEach((data) => {
+      data.forEach((post) => {
         knock.push({
-          postId: doc.id,
-          body: data.data().body,
-          createdAt: data.data().createdAt,
-          userHandle: data.data().userHandle,
-          userImage: data.data().userImage,
-          commentCount: data.data().commentCount,
-          likeCount: data.data().likeCount,
+          postId: post.id,
+          body: post.data().body,
+          createdAt: post.data().createdAt,
+          userHandle: post.data().userHandle,
+          userImage: post.data().userImage,
+          commentCount: post.data().commentCount,
+          likeCount: post.data().likeCount,
         });
       });
       return res.json(knock);
