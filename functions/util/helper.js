@@ -55,7 +55,7 @@ const validateLogin = (data) => {
     errors.email = "Email must not be empty";
   }
   if (isEmpty(data.password)) {
-    errors.email = "Password must not be empty";
+    errors.password = "Password must not be empty";
   }
   return {
     valid: Object.keys(errors).length === 0 ? true : false,
