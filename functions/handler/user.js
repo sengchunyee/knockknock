@@ -20,7 +20,7 @@ exports.signUp = (req, res) => {
     handle: req.body.handle,
   };
   const { valid, errors } = validateSignUp(newUser);
-  if (!valid) return res.status(400).json({ errors });
+  if (!valid) return res.status(400).json(errors);
   const noImage = "avatar.png";
   db.doc(`/users/${newUser.handle}`)
     .get()
@@ -48,7 +48,7 @@ exports.signUp = (req, res) => {
       return res.status(201).json({ tokenId });
     })
     .catch((err) => {
-      return res.status(500).json({ err });
+      return res.status(500).json(err);
     });
 };
 
@@ -70,7 +70,7 @@ exports.login = (req, res) => {
       return res.json({ token });
     })
     .catch((err) => {
-      return res.status(400).json({ err });
+      return res.status(400).json(err);
     });
 };
 
