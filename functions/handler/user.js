@@ -33,8 +33,8 @@ exports.signUp = (req, res) => {
       userId = data.user.uid;
       return data.user.getIdToken();
     })
-    .then((token) => {
-      tokenId = token;
+    .then((tokenId) => {
+      token = tokenId;
       const userCredentials = {
         handle: newUser.handle,
         email: newUser.email,
@@ -45,7 +45,7 @@ exports.signUp = (req, res) => {
       return db.doc(`/users/${newUser.userId}`).set(userCredentials);
     })
     .then(() => {
-      return res.status(201).json({ tokenId });
+      return res.status(201).json({ token });
     })
     .catch((err) => {
       return res.status(500).json(err);
