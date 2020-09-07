@@ -60,7 +60,7 @@ exports.getPost = (req, res) => {
         return res.status(404).json({ error: "Post not found" });
       }
       post = doc.data();
-      post.id = doc.id;
+      post.postId = doc.id;
       return db
         .collection("comments")
         .orderBy("createdAt", "desc")
